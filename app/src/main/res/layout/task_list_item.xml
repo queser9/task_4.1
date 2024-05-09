@@ -1,35 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="#FFFFFF">
 
     <TextView
         android:id="@+id/textViewTaskTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textSize="18sp"
+        android:textColor="#000000"
+        tools:text="Task Title"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <TextView
         android:id="@+id/textViewTaskDescription"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textSize="16sp"
+        android:textColor="#000000"
+        tools:text="Task Description"
         app:layout_constraintTop_toBottomOf="@id/textViewTaskTitle"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <TextView
         android:id="@+id/textViewTaskDueDate"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textSize="14sp"
+        android:textColor="#000000"
+        tools:text="Due Date: 2021-01-01"
         app:layout_constraintTop_toBottomOf="@id/textViewTaskDescription"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
+
 

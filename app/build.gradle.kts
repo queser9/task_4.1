@@ -41,7 +41,7 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
 
     // 添加 Room 的依赖
-    val room_version = "2.4.2"  // 确保这是当前可用的最新版本
+    val room_version = "2.6.1"  // 确保这是当前可用的最新版本
     implementation("androidx.room:room-runtime:$room_version")
     annotationProcessor("androidx.room:room-compiler:$room_version")
 }

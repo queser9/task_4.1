@@ -1,76 +1,58 @@
 package com.example.task2;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import java.util.concurrent.Executors;
 
 public class TaskDetailActivity extends AppCompatActivity {
-
-    private TextView textViewTitle, textViewDescription, textViewDueDate;
-    private Button buttonEdit, buttonDelete;
-    private Task task; // 假设有逻辑从数据库加载这个 Task 对象
+    private TextView textViewDetailTitle;
+    private TextView textViewDetailDescription;
+    private TextView textViewDetailDueDate;
+    private int taskId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task_detail);
 
-        textViewTitle = findViewById(R.id.textViewDetailTitle);
-        textViewDescription = findViewById(R.id.textViewDetailDescription);
-        textViewDueDate = findViewById(R.id.textViewDetailDueDate);
-        buttonEdit = findViewById(R.id.buttonEdit);
-        buttonDelete = findViewById(R.id.buttonDelete);
+        textViewDetailTitle = findViewById(R.id.textViewDetailTitle);
+        textViewDetailDescription = findViewById(R.id.textViewDetailDescription);
+        textViewDetailDueDate = findViewById(R.id.textViewDetailDueDate);
 
-        int taskId = getIntent().getIntExtra("taskId", -1);
-        task = TaskRoomDatabase.getDatabase(getApplicationContext()).taskDao().getTaskById(taskId);
+        taskId = getIntent().getIntExtra("taskId", -1);
 
-        initViews();
-
-        buttonEdit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(TaskDetailActivity.this, AddTaskActivity.class);
-                intent.putExtra("taskId", task.getId());
-                startActivity(intent);
-            }
+        findViewById(R.id.buttonEdit).setOnClickListener(v -> {
+            Intent intent = new Intent(this, AddTaskActivity.class);
+            intent.putExtra("taskId", taskId);
+            startActivity(intent);
         });
 
-        buttonDelete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                confirmDelete();
-            }
+        findViewById(R.id.buttonDelete).setOnClickListener(v -> deleteTask(taskId));
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadTaskDetails(taskId);
+    }
+
+    private void loadTaskDetails(int taskId) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            Task task = TaskRoomDatabase.getDatabase(getApplicationContext()).taskDao().getTaskById(taskId);
+            runOnUiThread(() -> {
+                textViewDetailTitle.setText(task.getTitle());
+                textViewDetailDescription.setText(task.getDescription());
+                textViewDetailDueDate.setText("Due Date: " + task.getDueDate());
+            });
         });
     }
 
-    private void initViews() {
-        if (task != null) {
-            textViewTitle.setText(task.getTitle());
-            textViewDescription.setText(task.getDescription());
-            textViewDueDate.setText(task.getDueDate());
-        }
-    }
-
-    private void confirmDelete() {
-        new AlertDialog.Builder(this)
-                .setTitle("Confirm Delete")
-                .setMessage("Are you sure you want to delete this task?")
-                .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        deleteTask();
-                    }
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
-    private void deleteTask() {
-        TaskRoomDatabase.getDatabase(getApplicationContext()).taskDao().delete(task);
-        finish();
+    private void deleteTask(int taskId) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            TaskRoomDatabase.getDatabase(getApplicationContext()).taskDao().deleteById(taskId);
+            runOnUiThread(this::finish);
+        });
     }
 }

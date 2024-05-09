@@ -1,16 +1,15 @@
 package com.example.task2;
 
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import androidx.appcompat.app.AppCompatActivity;
+import java.util.concurrent.Executors;
 
 public class AddTaskActivity extends AppCompatActivity {
-
-    private EditText editTextTitle, editTextDescription, editTextDueDate;
-    private Button buttonSave;
-    private Task task;  // 可能是新任务或现有任务
+    private EditText editTextTitle;
+    private EditText editTextDescription;
+    private EditText editTextDueDate;
+    private int taskId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,38 +19,52 @@ public class AddTaskActivity extends AppCompatActivity {
         editTextTitle = findViewById(R.id.editTextTitle);
         editTextDescription = findViewById(R.id.editTextDescription);
         editTextDueDate = findViewById(R.id.editTextDueDate);
-        buttonSave = findViewById(R.id.buttonSave);
 
-        int taskId = getIntent().getIntExtra("taskId", -1);
+        taskId = getIntent().getIntExtra("taskId", -1);
+
         if (taskId != -1) {
-            task = TaskRoomDatabase.getDatabase(getApplicationContext()).taskDao().getTaskById(taskId);
-            editTextTitle.setText(task.getTitle());
-            editTextDescription.setText(task.getDescription());
-            editTextDueDate.setText(task.getDueDate());
+            loadTaskDetails(taskId);
         }
 
-        buttonSave.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                saveTask();
-            }
+        findViewById(R.id.buttonSave).setOnClickListener(v -> saveTask());
+    }
+
+    private void loadTaskDetails(int taskId) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            Task task = TaskRoomDatabase.getDatabase(getApplicationContext()).taskDao().getTaskById(taskId);
+            runOnUiThread(() -> {
+                editTextTitle.setText(task.getTitle());
+                editTextDescription.setText(task.getDescription());
+                editTextDueDate.setText(task.getDueDate());
+            });
         });
     }
 
     private void saveTask() {
-        String title = editTextTitle.getText().toString().trim();
-        String description = editTextDescription.getText().toString().trim();
-        String dueDate = editTextDueDate.getText().toString().trim();
+        String title = editTextTitle.getText().toString();
+        String description = editTextDescription.getText().toString();
+        String dueDate = editTextDueDate.getText().toString();
 
-        if (task == null) {
-            task = new Task(title, description, dueDate);
-            TaskRoomDatabase.getDatabase(getApplicationContext()).taskDao().insert(task);
+        if (taskId != -1) {
+            updateTask(taskId, title, description, dueDate);
         } else {
-            task.setTitle(title);
-            task.setDescription(description);
-            task.setDueDate(dueDate);
-            TaskRoomDatabase.getDatabase(getApplicationContext()).taskDao().update(task);
+            insertTask(title, description, dueDate);
         }
-        finish();
+    }
+
+    private void insertTask(String title, String description, String dueDate) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            TaskRoomDatabase.getDatabase(getApplicationContext()).taskDao().insert(new Task(title, description, dueDate));
+            runOnUiThread(this::finish);
+        });
+    }
+
+    private void updateTask(int taskId, String title, String description, String dueDate) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            Task task = new Task(title, description, dueDate);
+            task.setId(taskId);
+            TaskRoomDatabase.getDatabase(getApplicationContext()).taskDao().update(task);
+            runOnUiThread(this::finish);
+        });
     }
 }
